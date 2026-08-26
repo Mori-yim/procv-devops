@@ -1,0 +1,74 @@
+# Pipeline CI/CD pour ProCV
+# build -> test -> construction + publication des images -> (deploiement manuel)
+
+stages:
+  - build
+  - test
+  - publish
+  - deploy
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+  IMAGE_BACKEND: $CI_REGISTRY_IMAGE/backend
+  IMAGE_FRONTEND: $CI_REGISTRY_IMAGE/frontend
+
+# ---------- BACKEND ----------
+build-backend:
+  stage: build
+  image: maven:3.9-eclipse-temurin-17
+  script:
+    - cd backend
+    - mvn -B $MAVEN_OPTS clean compile
+  cache:
+    paths:
+      - backend/.m2/repository
+
+test-backend:
+  stage: test
+  image: maven:3.9-eclipse-temurin-17
+  script:
+    - cd backend
+    - mvn -B $MAVEN_OPTS test
+  cache:
+    paths:
+      - backend/.m2/repository
+
+# ---------- PUBLICATION DES IMAGES SUR LE REGISTRY GITLAB ----------
+# CI_REGISTRY, CI_REGISTRY_USER et CI_REGISTRY_PASSWORD sont fournis
+# automatiquement par GitLab pour le registre integre au projet.
+publish-backend:
+  stage: publish
+  image: docker:24
+  services:
+    - docker:24-dind
+  script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - docker build -t "$IMAGE_BACKEND:$CI_COMMIT_SHORT_SHA" -t "$IMAGE_BACKEND:latest" ./backend
+    - docker push "$IMAGE_BACKEND:$CI_COMMIT_SHORT_SHA"
+    - docker push "$IMAGE_BACKEND:latest"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+publish-frontend:
+  stage: publish
+  image: docker:24
+  services:
+    - docker:24-dind
+  script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - docker build -t "$IMAGE_FRONTEND:$CI_COMMIT_SHORT_SHA" -t "$IMAGE_FRONTEND:latest" ./frontend
+    - docker push "$IMAGE_FRONTEND:$CI_COMMIT_SHORT_SHA"
+    - docker push "$IMAGE_FRONTEND:latest"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# ---------- DEPLOIEMENT (manuel, a completer selon ton hebergeur) ----------
+deploy-staging:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  script:
+    - echo "Etape a completer : kubectl apply -f k8s/ selon ton cluster cible"
+    - echo "Ou : ssh vers un VPS puis docker compose pull && docker compose up -d"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"/><style>
+@page{size:A4;margin:2cm}body{font-family:Helvetica,Arial,sans-serif;color:#222;font-size:11pt}h1{color:#1b3a6b;margin-bottom:0;font-size:20pt}.poste{color:#555;font-size:12pt}.contact{font-size:9pt;color:#666;margin-bottom:14px}h2{color:#1b3a6b;font-size:12pt;border-bottom:1.5px solid #1b3a6b;padding-bottom:3px;margin-top:18px}.item{margin-bottom:10px}.item-titre{font-weight:bold}.item-periode{color:#777;font-size:9pt;float:right}.competence{display:inline-block;background:#eef2fa;color:#1b3a6b;padding:3px 8px;border-radius:10px;font-size:9pt;margin:2px}.filigrane{position:fixed;top:45%;left:15%;font-size:40pt;color:#bbb;transform:rotate(-30deg)}
+</style></head><body>
+<div class="filigrane" th:if="${filigrane}">ProCV - Version gratuite</div>
+<h1 th:text="${cv.prenomNom}">Prénom Nom</h1>
+<div class="poste" th:text="${cv.posteVise}">Poste visé</div>
+<div class="contact"><span th:text="${cv.email}">email</span> — <span th:text="${cv.telephone}">téléphone</span> — <span th:text="${cv.ville}">ville</span></div>
+<h2>Profil</h2><p th:text="${cv.resume}">Résumé du profil</p>
+<h2>Expériences professionnelles</h2>
+<div class="item" th:each="exp : ${cv.experiences}"><span class="item-periode" th:text="${exp.periode}">période</span><div class="item-titre" th:text="|${exp.poste} — ${exp.entreprise}|">Poste — Entreprise</div><div th:text="${exp.ville}">Ville</div><p th:text="${exp.description}">Description</p></div>
+<h2>Formation</h2><div class="item" th:each="f : ${cv.formations}"><span class="item-periode" th:text="${f.periode}">période</span><div class="item-titre" th:text="|${f.diplome} — ${f.etablissement}|">Diplôme — Établissement</div></div>
+<h2>Compétences</h2><div><span class="competence" th:each="c : ${cv.competences}" th:text="${c.nom}">Compétence</span></div>
+</body></html>
