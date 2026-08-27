@@ -1,3 +1,4 @@
+
 # ProCV — Stack full-stack dockerisée
 
 ProCV est une application de création de CV professionnels destinée au marché de l'emploi camerounais. Cette version transforme le projet en **stack reproductible de bout en bout** : frontend React, API Spring Boot, MySQL, Docker Compose, healthchecks, réseau Docker interne, volume persistant et images multi-stage.
@@ -316,3 +317,4 @@ docker compose down -v
 - renforcer les CSP/headers Nginx et la rotation des clés JWT ;
 - ajouter CI/CD avec build, Trivy, Gitleaks et publication Docker Hub ;
 - ajouter des tests E2E frontend.
+
