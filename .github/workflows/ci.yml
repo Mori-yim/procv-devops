@@ -5,37 +5,31 @@ on:
     branches:
       - main
       - develop
-
   pull_request:
     branches:
       - main
       - develop
 
 jobs:
-
   backend:
-  name: Backend - Build & Tests
-  runs-on: ubuntu-latest
+    name: Backend - Build & Tests
+    runs-on: ubuntu-latest
 
-  steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Set up Java
-      uses: actions/setup-java@v4
-      with:
-        distribution: temurin
-        java-version: '17'
-        cache: maven
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
 
-    - name: Make Maven Wrapper executable
-      working-directory: backend
-      run: chmod +x mvnw
-
-    - name: Build and test backend
-      working-directory: backend
-      run: ./mvnw --batch-mode clean verify
-
+      # On supprime l'étape "Make Maven Wrapper executable" car on utilise mvn directement
+      - name: Build and test backend
+        working-directory: backend
+        run: mvn --batch-mode clean verify
 
   frontend:
     name: Frontend - Build
