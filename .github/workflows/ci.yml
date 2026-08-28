@@ -29,8 +29,9 @@ jobs:
       # On supprime l'étape "Make Maven Wrapper executable" car on utilise mvn directement
       - name: Build and test backend
         working-directory: backend
-        run: mvn --batch-mode clean verify
-
+        run: |
+         chmod +x backend/mvnw
+         ./backend/mvnw clean package
   frontend:
     name: Frontend - Build
     runs-on: ubuntu-latest
