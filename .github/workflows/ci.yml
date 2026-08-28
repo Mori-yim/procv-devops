@@ -1,54 +1,128 @@
-name: ProCV CI
+name: proCV CI
 
 on:
   push:
-    branches:
-      - main
-      - develop
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
-      - develop
+    branches: [ main ]
+
+# Permissions nécessaires pour pousser les images Docker sur GHCR
+permissions:
+  contents: read
+  packages: write
 
 jobs:
-  backend:
-    name: Backend - Build & Tests
+  # 1. Tests Backend
+  test-backend:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Java
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
+          distribution: 'temurin'
           java-version: '17'
-          cache: maven
-
-      # On supprime l'étape "Make Maven Wrapper executable" car on utilise mvn directement
-      - name: Build and test backend
+          cache: 'maven'
+          
+      - name: Run backend tests
         working-directory: backend
-        run: mvn clean package
-  frontend:
-    name: Frontend - Build
+        run: mvn test
+
+  # 2. Tests Frontend
+  test-frontend:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
+      
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: npm
+          cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
-
+          
       - name: Install dependencies
         working-directory: frontend
         run: npm ci
+        
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm test
 
+  # 3. Build Backend (needs les tests backend réussis)
+  build-backend:
+    needs: test-backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+          
+      - name: Build backend jar
+        working-directory: backend
+        run: mvn clean package -DskipTests # -DskipTests car déjà testé
+
+  # 4. Build Frontend (needs les tests frontend réussis)
+  build-frontend:
+    needs: test-frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+        
       - name: Build frontend
         working-directory: frontend
         run: npm run build
+
+  # 5. Docker Build & Push (Needs les builds backend et frontend)
+  docker-build-push:
+    needs: [build-backend, build-frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Construction et push de l'image Backend
+      - name: Build and push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/backend:latest
+            ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
+
+      # Construction et push de l'image Frontend
+      - name: Build and push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/frontend:latest
+            ghcr.io/${{ github.repository }}/frontend:${{ github.sha }}
