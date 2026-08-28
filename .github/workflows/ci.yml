@@ -111,8 +111,8 @@ jobs:
           context: ./backend
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}/backend:latest
-            ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
+            ghcr.io/${{ lower(github.repository) }}/backend:latest
+            ghcr.io/${{ lower(github.repository) }}/backend:${{ github.sha }}
 
       # Construction et push de l'image Frontend
       - name: Build and push Frontend
@@ -121,5 +121,5 @@ jobs:
           context: ./frontend
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}/frontend:latest
-            ghcr.io/${{ github.repository }}/frontend:${{ github.sha }}
+            ghcr.io/${{ lower(github.repository) }}/frontend:latest
+            ghcr.io/${{ lower(github.repository) }}/frontend:${{ github.sha }}
