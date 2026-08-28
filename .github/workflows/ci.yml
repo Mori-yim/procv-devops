@@ -86,9 +86,7 @@ jobs:
         working-directory: frontend
         run: npm ci
         
-      - name: Build frontend
-        working-directory: frontend
-        run: npm run build
+      
 
   # 5. Docker Build & Push (Needs les builds backend et frontend)
   docker-build-push:
