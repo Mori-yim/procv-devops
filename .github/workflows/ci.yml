@@ -29,7 +29,7 @@ jobs:
         working-directory: backend
         run: mvn test
 
-  # 2. Tests Frontend
+  # 2. Vérification Frontend (Installation des dépendances UNIQUEMENT car pas de script "test" actuellement)
   test-frontend:
     runs-on: ubuntu-latest
     steps:
@@ -45,10 +45,7 @@ jobs:
       - name: Install dependencies
         working-directory: frontend
         run: npm ci
-        
-      - name: Run frontend tests
-        working-directory: frontend
-        run: npm test
+      # L'étape de test a été retirée car "npm test" n'existe pas encore dans votre frontend
 
   # 3. Build Backend (needs les tests backend réussis)
   build-backend:
@@ -66,9 +63,9 @@ jobs:
           
       - name: Build backend jar
         working-directory: backend
-        run: mvn clean package -DskipTests # -DskipTests car déjà testé
+        run: mvn clean package -DskipTests # -DskipTests car déjà testé plus haut
 
-  # 4. Build Frontend (needs les tests frontend réussis)
+  # 4. Build Frontend (needs les dépendances frontend installées)
   build-frontend:
     needs: test-frontend
     runs-on: ubuntu-latest
@@ -86,7 +83,9 @@ jobs:
         working-directory: frontend
         run: npm ci
         
-      
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
 
   # 5. Docker Build & Push (Needs les builds backend et frontend)
   docker-build-push:
